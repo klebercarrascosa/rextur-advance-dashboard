@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rextur Advance — Controle Comercial</title>
+  <style>
+    :root {
+      --bg: #0f0f0f;
+      --surface: #1a1a1a;
+      --surface-raised: #222;
+      --border: #333;
+      --text-primary: #f0f0f0;
+      --text-secondary: #aaa;
+      --text-tertiary: #777;
+      --text-quaternary: #555;
+      --positive: #4ade80;
+      --danger: #f87171;
+      --warning: #fbbf24;
+      --accent: #60a5fa;
+      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    .hidden { display: none !important; }
+
+    /* LOGIN */
+    #login-screen {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      min-height: 100vh; padding: 32px 20px; gap: 20px;
+    }
+    .login-card {
+      width: 100%; max-width: 380px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+    .login-logo {
+      width: 64px; height: 64px; border-radius: 16px;
+      background: var(--surface-raised); display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 8px;
+    }
+    .login-logo svg { width: 32px; height: 32px; color: var(--text-primary); }
+    .login-title { text-align: center; font-size: 20px; font-weight: 600; }
+    .login-sub { text-align: center; font-size: 14px; color: var(--text-secondary); margin-top: -8px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-group label { font-size: 12px; color: var(--text-tertiary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-group input, .form-group select {
+      padding: 12px 14px; border-radius: 10px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text-primary); font-size: 15px; outline: none;
+      font-family: inherit;
+    }
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+    .btn-primary {
+      padding: 14px; border-radius: 10px; border: none;
+      background: var(--text-primary); color: var(--bg);
+      font-size: 15px; font-weight: 600; cursor: pointer; transition: opacity 0.2s;
+    }
+    .btn-primary:hover { opacity: 0.85; }
+    .error-msg { font-size: 13px; color: var(--danger); text-align: center; display: none; }
+
+    /* DASHBOARD */
+    #dash-screen { display: none; flex-direction: column; gap: 20px; padding: 20px; max-width: 1200px; margin: 0 auto; }
+    .dash-header {
+      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
+    }
+    .dash-header h1 { font-size: 20px; font-weight: 600; }
+    .dash-header p { font-size: 13px; color: var(--text-secondary); margin-top: 2px; }
+    .btn-ghost {
+      padding: 8px 14px; border-radius: 8px; border: 1px solid var(--border);
+      background: transparent; color: var(--text-secondary); font-size: 13px; cursor: pointer;
+      display: flex; align-items: center; gap: 6px; font-family: inherit;
+    }
+    .btn-ghost:hover { background: var(--surface); }
+
+    /* FILTERS */
+    .filters-bar {
+      display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end;
+      padding: 16px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface);
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .filter-group label { font-size: 11px; color: var(--text-tertiary); font-weight: 500; text-transform: uppercase; letter-spacing: 0.5px; }
+    .filter-group input, .filter-group select {
+      padding: 10px 12px; border-radius: 8px; border: 1px solid var(--border);
+      background: var(--bg); color: var(--text-primary); font-size: 14px; outline: none; font-family: inherit;
+    }
+    .filter-group input:focus, .filter-group select:focus { border-color: var(--accent); }
+
+    /* KPIs */
+    .kpi-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;
+    }
+    .kpi-card {
+      padding: 20px; border-radius: 12px; border: 1px solid var(--border); background: var(--surface);
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .kpi-label { font-size: 12px; color: var(--text-tertiary); font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .kpi-value { font-size: 32px; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .kpi-sub { font-size: 12px; color: var(--text-tertiary); }
+
+    /* TABLE */
+    .table-wrap {
+      border-radius: 12px; border: 1px solid var(--border); background: var(--surface); overflow: hidden;
+    }
+    .table-header {
+      padding: 14px 16px; background: var(--surface-raised); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .table-header span:first-child { font-size: 14px; font-weight: 600; }
+    .table-header .count { font-size: 12px; color: var(--text-tertiary); }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th {
+      padding: 12px 14px; text-align: left; color: var(--text-tertiary); font-weight: 500;
+      border-bottom: 1px solid var(--border); white-space: nowrap; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px;
+    }
+    th.center, td.center { text-align: center; }
+    td { padding: 12px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    .badge {
+      display: inline-block; padding: 3px 10px; border-radius: 6px;
+      font-size: 11px; font-weight: 600;
+    }
+    .badge-performou { background: rgba(74,222,128,0.12); color: var(--positive); }
+    .badge-nao { background: rgba(248,113,113,0.12); color: var(--danger); }
+    .badge-ativo { background: rgba(251,191,36,0.12); color: var(--warning); }
+    .badge-inativo { background: rgba(85,85,85,0.2); color: var(--text-quaternary); }
+
+    /* LOADING */
+    .loading-overlay {
+      position: fixed; inset: 0; background: rgba(15,15,15,0.9);
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+      z-index: 100;
+    }
+    .spinner {
+      width: 40px; height: 40px; border: 3px solid var(--border);
+      border-top-color: var(--accent); border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-overlay p { color: var(--text-secondary); font-size: 14px; }
+
+    /* RESPONSIVE */
+    @media (max-width: 600px) {
+      .dash-header h1 { font-size: 17px; }
+      .kpi-value { font-size: 24px; }
+      .filters-bar { flex-direction: column; align-items: stretch; }
+      .filter-group { width: 100%; }
+      .filter-group input, .filter-group select { width: 100%; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div id="loading" class="loading-overlay hidden">
+  <div class="spinner"></div>
+  <p>Carregando dados do Google Sheets...</p>
+</div>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    </div>
+    <div class="login-title">Rextur Advance</div>
+    <div class="login-sub">Controle comercial — agências de viagens</div>
+
+    <div class="form-group">
+      <label>Perfil de acesso</label>
+      <select id="login-role" onchange="toggleExec()">
+        <option value="gerente">Gerente Comercial</option>
+        <option value="executivo">Executivo de Vendas</option>
+      </select>
+    </div>
+
+    <div class="form-group" id="exec-box" style="display:none">
+      <label>Seu nome</label>
+      <select id="login-exec"></select>
+    </div>
+
+    <div class="form-group">
+      <label>Senha</label>
+      <input type="password" id="login-pass" placeholder="Digite sua senha" />
+    </div>
+
+    <button class="btn-primary" onclick="doLogin()">Entrar</button>
+    <p class="error-msg" id="login-error">Senha incorreta. Use "1234".</p>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dash-screen">
+  <div class="dash-header">
+    <div>
+      <h1>Dashboard Comercial</h1>
+      <p id="user-greeting"></p>
+    </div>
+    <button class="btn-ghost" onclick="doLogout()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      Sair
+    </button>
+  </div>
+
+  <div class="filters-bar">
+    <div class="filter-group">
+      <label>Data início</label>
+      <input type="date" id="f-start" value="2026-07-01" onchange="render()" />
+    </div>
+    <div class="filter-group">
+      <label>Data final</label>
+      <input type="date" id="f-end" value="2026-08-04" onchange="render()" />
+    </div>
+    <div class="filter-group" id="f-exec-box" style="display:none">
+      <label>Executivo</label>
+      <select id="f-exec" onchange="render()"><option value="todos">Todos</option></select>
+    </div>
+    <div class="filter-group">
+      <label>Status</label>
+      <select id="f-status" onchange="render()">
+        <option value="todos">Todos</option>
+        <option value="performou">Performou</option>
+        <option value="nao-performou">Não performou</option>
+        <option value="ativo">Ativo</option>
+        <option value="inativo">Inativo</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+        Metas ativas
+      </div>
+      <div class="kpi-value" id="kpi-metas">0</div>
+      <div class="kpi-sub">agências com meta vigente</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        Executivos ativos
+      </div>
+      <div class="kpi-value" id="kpi-execs">0</div>
+      <div class="kpi-sub">com carteira no período</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        Crescimento
+      </div>
+      <div class="kpi-value" id="kpi-cresc">+0%</div>
+      <div class="kpi-sub">realizado vs meta no período</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        Não performaram
+      </div>
+      <div class="kpi-value" id="kpi-nao" style="color:var(--danger)">0</div>
+      <div class="kpi-sub">abaixo de 70% da meta</div>
+    </div>
+  </div>
+
+  <div class="table-wrap">
+    <div class="table-header">
+      <span>Agências de viagens</span>
+      <span class="count" id="table-count">0 registros</span>
+    </div>
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Agência</th>
+            <th>Executivo</th>
+            <th class="center">Meta</th>
+            <th class="center">Realizado</th>
+            <th class="center">%</th>
+            <th class="center">Status</th>
+            <th>Último contato</th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   CONFIGURAÇÃO — ALTERE AQUI PARA CONECTAR SEU GOOGLE SHEETS
+   ============================================================
+
+   PASSO 1: Crie uma planilha no Google Sheets com estas colunas:
+   A: Agencia      B: Executivo   C: Meta     D: Realizado
+   E: Status       F: Ativo       G: UltimoContato
+
+   PASSO 2: Compartilhe a planilha como "Qualquer pessoa com o link pode VER"
+   (clique em Compartilhar -> Acesso Geral -> Visualizador)
+
+   PASSO 3: Pegue o ID da planilha (aquele longo no URL):
+   https://docs.google.com/spreadsheets/d/【ID_AQUI】/edit
+
+   PASSO 4: Cole o ID abaixo na variável SHEET_ID:
+   ============================================================ */
+
+const SHEET_ID = ""; // <-- COLE O ID DA SUA PLANILHA AQUI
+const SHEET_GID = "0"; // ID da aba (geralmente 0 para a primeira aba)
+
+// Se não tiver planilha, deixe SHEET_ID vazio que usa dados de demonstração
+
+/* ============================================================ */
+
+let allData = [];
+let currentRole = null;
+let currentUser = null;
+
+function showLoading() { document.getElementById('loading').classList.remove('hidden'); }
+function hideLoading() { document.getElementById('loading').classList.add('hidden'); }
+
+async function loadData() {
+  showLoading();
+
+  if (!SHEET_ID) {
+    // Dados de demonstração
+    allData = generateDemoData();
+    hideLoading();
+    return;
+  }
+
+  try {
+    // Tenta carregar do Google Sheets via CSV público
+    const url = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/export?format=csv&gid=${SHEET_GID}`;
+    const res = await fetch(url);
+    const csv = await res.text();
+    allData = parseCSV(csv);
+  } catch (e) {
+    console.error("Erro ao carregar do Google Sheets:", e);
+    alert("Não foi possível carregar o Google Sheets. Verifique o ID e as permissões. Usando dados de demonstração.");
+    allData = generateDemoData();
+  }
+  hideLoading();
+}
+
+function parseCSV(csvText) {
+  const lines = csvText.trim().split("\n");
+  const headers = lines[0].split(",").map(h => h.trim().replace(/^"|"$/g, ""));
+  const out = [];
+  for (let i = 1; i < lines.length; i++) {
+    const vals = lines[i].split(",").map(v => v.trim().replace(/^"|"$/g, ""));
+    const obj = {};
+    headers.forEach((h, idx) => { obj[h] = vals[idx] || ""; });
+    // Normaliza campos
+    const meta = parseFloat((obj.Meta || obj.meta || "0").replace(/[^0-9.,]/g, "").replace(/\./g, "").replace(/,/g, ".")) || 0;
+    const real = parseFloat((obj.Realizado || obj.realizado || "0").replace(/[^0-9.,]/g, "").replace(/\./g, "").replace(/,/g, ".")) || 0;
+    const pct = meta > 0 ? Math.round((real / meta) * 100) : 0;
+    const statusRaw = (obj.Status || obj.status || "").toLowerCase().trim();
+    const ativoRaw = (obj.Ativo || obj.ativo || "sim").toLowerCase().trim();
+    const ativo = ativoRaw === "sim" || ativoRaw === "s" || ativoRaw === "true" || ativoRaw === "1" || ativoRaw === "ativo";
+    let status = statusRaw;
+    if (!status) {
+      if (pct >= 100) status = "performou";
+      else if (pct >= 70) status = "ativo";
+      else status = "nao-performou";
+      if (!ativo) status = "inativo";
+    }
+    out.push({
+      agencia: obj.Agencia || obj.agencia || obj.Agência || obj.agência || "Agência " + i,
+      executivo: obj.Executivo || obj.executivo || "N/A",
+      meta: meta,
+      realizado: real,
+      pct: pct,
+      status: status,
+      ativo: ativo,
+      ultimoContato: obj.UltimoContato || obj.ultimoContato || obj["Último Contato"] || ""
+    });
+  }
+  return out;
+}
+
+function generateDemoData() {
+  const execs = ["Ana Paula","Bruno Costa","Carla Mendes","Diego Lima","Elisa Rocha"];
+  const nomes = ["Viajar É Preciso","Mundo Novo Turismo","Top Trip","Explora Viagens","Aventura Tour","Horizonte Aberto","Rota dos Sonhos","Passaporte Global","Destinos Incríveis","Espaço Turismo","Cia do Turismo","Bem Viagem","Lazer Total","Fly Tour","Prime Travel","Up Viagens","Click Trip","Voo Livre","Mapa Mundi","Travel Plus"];
+  const data = [];
+  for (let i = 0; i < 35; i++) {
+    const e = execs[i % execs.length];
+    const m = (Math.floor(Math.random() * 90) + 30) * 1000;
+    const r = Math.floor(m * (Math.random() * 1.2 + 0.4));
+    const p = Math.round((r / m) * 100);
+    let s = p >= 100 ? "performou" : (p >= 70 ? "ativo" : "nao-performou");
+    const a = Math.random() > 0.1;
+    if (!a) s = "inativo";
+    const d = new Date(2026, 6, Math.floor(Math.random() * 31) + 1);
+    data.push({ agencia: nomes[i % nomes.length] + (i >= 20 ? " " + (i - 19) : ""), executivo: e, meta: m, realizado: r, pct: p, status: s, ativo: a, ultimoContato: d.toISOString().split("T")[0] });
+  }
+  return data;
+}
+
+function toggleExec() {
+  const role = document.getElementById('login-role').value;
+  const box = document.getElementById('exec-box');
+  box.style.display = role === 'executivo' ? 'flex' : 'none';
+}
+
+function populateExecSelect() {
+  const sel = document.getElementById('login-exec');
+  const fsel = document.getElementById('f-exec');
+  const execs = [...new Set(allData.map(d => d.executivo))].sort();
+  sel.innerHTML = '';
+  fsel.innerHTML = '<option value="todos">Todos os executivos</option>';
+  execs.forEach(e => {
+    const o1 = document.createElement('option'); o1.value = e; o1.textContent = e; sel.appendChild(o1);
+    const o2 = document.createElement('option'); o2.value = e; o2.textContent = e; fsel.appendChild(o2);
+  });
+}
+
+function doLogin() {
+  const pass = document.getElementById('login-pass').value;
+  if (pass !== '1234') { document.getElementById('login-error').style.display = 'block'; return; }
+  document.getElementById('login-error').style.display = 'none';
+  currentRole = document.getElementById('login-role').value;
+  currentUser = currentRole === 'executivo' ? document.getElementById('login-exec').value : 'Kleber';
+
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('dash-screen').style.display = 'flex';
+
+  document.getElementById('user-greeting').textContent = currentRole === 'gerente'
+    ? 'Bem-vindo, Kleber. Visão completa do time.'
+    : `Bem-vindo, ${currentUser}. Sua carteira de agências.`;
+
+  document.getElementById('f-exec-box').style.display = currentRole === 'gerente' ? 'flex' : 'none';
+  render();
+}
+
+function doLogout() {
+  currentRole = null; currentUser = null;
+  document.getElementById('dash-screen').style.display = 'none';
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('login-pass').value = '';
+}
+
+function fmtMoney(n) {
+  return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+}
+
+function render() {
+  const start = document.getElementById('f-start').value;
+  const end = document.getElementById('f-end').value;
+  const execF = document.getElementById('f-exec').value;
+  const statusF = document.getElementById('f-status').value;
+
+  let filtered = allData.filter(c => {
+    if (currentRole === 'executivo' && c.executivo !== currentUser) return false;
+    if (currentRole === 'gerente' && execF !== 'todos' && c.executivo !== execF) return false;
+    if (statusF === 'todos') return true;
+    if (statusF === 'performou') return c.status === 'performou';
+    if (statusF === 'nao-performou') return c.status === 'nao-performou';
+    if (statusF === 'ativo') return c.ativo && c.status !== 'performou';
+    if (statusF === 'inativo') return !c.ativo;
+    return true;
+  });
+
+  const metasAtivas = filtered.filter(c => c.ativo).length;
+  const execsAtivos = new Set(filtered.filter(c => c.ativo).map(c => c.executivo)).size;
+  const totalMeta = filtered.reduce((s, c) => s + c.meta, 0);
+  const totalReal = filtered.reduce((s, c) => s + c.realizado, 0);
+  const cresc = totalMeta > 0 ? Math.round(((totalReal - totalMeta) / totalMeta) * 100) : 0;
+  const naoPerf = filtered.filter(c => c.status === 'nao-performou').length;
+
+  document.getElementById('kpi-metas').textContent = metasAtivas;
+  document.getElementById('kpi-execs').textContent = execsAtivos;
+  const elCresc = document.getElementById('kpi-cresc');
+  elCresc.textContent = (cresc >= 0 ? '+' : '') + cresc + '%';
+  elCresc.style.color = cresc >= 0 ? 'var(--positive)' : 'var(--danger)';
+  document.getElementById('kpi-nao').textContent = naoPerf;
+  document.getElementById('table-count').textContent = filtered.length + ' registros';
+
+  const tbody = document.getElementById('tbody');
+  tbody.innerHTML = '';
+  filtered.forEach(c => {
+    let badgeClass = '', badgeText = '';
+    if (c.status === 'performou') { badgeClass = 'badge-performou'; badgeText = 'Performou'; }
+    else if (c.status === 'nao-performou') { badgeClass = 'badge-nao'; badgeText = 'Não performou'; }
+    else if (!c.ativo) { badgeClass = 'badge-inativo'; badgeText = 'Inativo'; }
+    else { badgeClass = 'badge-ativo'; badgeText = 'Ativo'; }
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${c.agencia}</td>
+      <td style="color:var(--text-secondary)">${c.executivo}</td>
+      <td class="center" style="color:var(--text-secondary)">${fmtMoney(c.meta)}</td>
+      <td class="center" style="color:var(--text-secondary)">${fmtMoney(c.realizado)}</td>
+      <td class="center" style="color:var(--text-secondary)">${c.pct}%</td>
+      <td class="center"><span class="badge ${badgeClass}">${badgeText}</span></td>
+      <td style="color:var(--text-tertiary)">${c.ultimoContato ? c.ultimoContato.split('-').reverse().join('/') : '-'}</td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Inicializa
+(async function init() {
+  await loadData();
+  populateExecSelect();
+})();
+</script>
+</body>
+</html>
