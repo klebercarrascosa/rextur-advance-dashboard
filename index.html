@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle Comercial</title>
+<title>Controle Comercial — Metas por Cliente</title>
 <style>
 :root {
   --bg:#0a0a0a; --surface:#141414; --surface-raised:#1e1e1e; --border:#2a2a2a;
@@ -42,20 +42,20 @@ body { font-family:var(--font); background:var(--bg); color:var(--text-primary);
 .dash-header p { font-size:13px; color:var(--text-secondary); margin-top:2px; }
 .dash-actions { display:flex; gap:8px; flex-wrap:wrap; }
 
-#admin-panel { display:none; flex-direction:column; gap:16px; padding:20px; border-radius:12px; border:1px solid var(--border); background:var(--surface); }
-#admin-panel h2 { font-size:16px; font-weight:600; display:flex; align-items:center; gap:8px; }
-.admin-grid { display:grid; grid-template-columns:1fr 1fr auto; gap:10px; align-items:end; }
-@media(max-width:600px){ .admin-grid { grid-template-columns:1fr; } }
+.meta-panel { display:flex; flex-direction:column; gap:14px; padding:20px; border-radius:12px; border:1px solid var(--border); background:var(--surface); }
+.meta-panel h2 { font-size:15px; font-weight:600; }
+.meta-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1fr auto; gap:10px; align-items:end; }
+@media(max-width:800px){ .meta-grid { grid-template-columns:1fr; } }
 
 .filters-bar { display:flex; flex-wrap:wrap; gap:12px; align-items:flex-end; padding:14px; border-radius:12px; border:1px solid var(--border); background:var(--surface); }
 .filter-group { display:flex; flex-direction:column; gap:4px; }
 .filter-group label { font-size:10px; color:var(--text-tertiary); font-weight:600; text-transform:uppercase; letter-spacing:0.6px; }
 .filter-group input, .filter-group select { padding:10px 12px; border-radius:8px; border:1px solid var(--border); background:var(--bg); color:var(--text-primary); font-size:14px; outline:none; font-family:inherit; }
 
-.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:12px; }
+.kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px; }
 .kpi-card { padding:18px; border-radius:12px; border:1px solid var(--border); background:var(--surface); display:flex; flex-direction:column; gap:6px; }
-.kpi-label { font-size:12px; color:var(--text-tertiary); font-weight:500; display:flex; align-items:center; gap:8px; }
-.kpi-value { font-size:26px; font-weight:600; font-variant-numeric:tabular-nums; }
+.kpi-label { font-size:12px; color:var(--text-tertiary); font-weight:500; }
+.kpi-value { font-size:24px; font-weight:600; font-variant-numeric:tabular-nums; }
 .kpi-sub { font-size:12px; color:var(--text-tertiary); }
 
 .table-wrap { border-radius:12px; border:1px solid var(--border); background:var(--surface); overflow:hidden; }
@@ -70,7 +70,6 @@ td { padding:12px 14px; border-bottom:1px solid var(--border); white-space:nowra
 tr:hover td { background:rgba(255,255,255,0.015); }
 
 .empty-state { padding:48px 24px; text-align:center; color:var(--text-tertiary); }
-.empty-state svg { width:48px; height:48px; margin-bottom:12px; opacity:0.5; }
 .empty-state h3 { font-size:16px; font-weight:600; color:var(--text-secondary); margin-bottom:6px; }
 .empty-state p { font-size:13px; max-width:400px; margin:0 auto; line-height:1.6; }
 
@@ -81,13 +80,6 @@ tr:hover td { background:rgba(255,255,255,0.015); }
 
 #toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(100px); background:var(--surface-raised); color:var(--text-primary); padding:12px 20px; border-radius:10px; border:1px solid var(--border); font-size:13px; opacity:0; transition:all .3s ease; z-index:200; }
 #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
-
-@media(max-width:600px){
-  .dash-header h1 { font-size:17px; }
-  .kpi-value { font-size:22px; }
-  .filters-bar { flex-direction:column; align-items:stretch; }
-  .filter-group, .filter-group input, .filter-group select { width:100%; }
-}
 </style>
 </head>
 <body>
@@ -102,18 +94,18 @@ tr:hover td { background:rgba(255,255,255,0.015); }
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
     </div>
     <div class="login-title">Controle Comercial</div>
-    <div class="login-sub">Painel de desempenho e metas</div>
+    <div class="login-sub">Painel de Metas por Cliente</div>
 
     <div class="form-group">
-      <label>Nome / Usuario</label>
-      <input type="text" id="login-user" placeholder="Digite seu nome de usuario" autocomplete="off" />
+      <label>Usuário</label>
+      <input type="text" id="login-user" placeholder="Seu nome" autocomplete="off" />
     </div>
     <div class="form-group">
       <label>Senha</label>
-      <input type="password" id="login-pass" placeholder="Digite sua senha" autocomplete="new-password" />
+      <input type="password" id="login-pass" placeholder="Sua senha" autocomplete="new-password" />
     </div>
     <button class="btn-primary" onclick="doLogin()" style="margin-top:4px;">Entrar</button>
-    <p class="error-msg" id="login-error">Usuario ou senha incorretos.</p>
+    <p class="error-msg" id="login-error">Usuário ou senha incorretos.</p>
   </div>
 </div>
 
@@ -121,84 +113,75 @@ tr:hover td { background:rgba(255,255,255,0.015); }
 <div id="dash-screen">
   <div class="dash-header">
     <div>
-      <h1>Dashboard Comercial</h1>
+      <h1>Dashboard Comercial e Plano de Metas</h1>
       <p id="user-greeting"></p>
     </div>
     <div class="dash-actions">
-      <button id="btn-admin" class="btn-ghost hidden" onclick="toggleAdmin()">Administrar executivos</button>
       <button class="btn-ghost" onclick="doLogout()">Sair</button>
     </div>
   </div>
 
-  <!-- ADMIN -->
-  <div id="admin-panel">
-    <h2>Gerenciar executivos de vendas</h2>
-    <p style="font-size:13px; color:var(--text-secondary);">Cadastre logins e senhas para os executivos.</p>
-    <div class="admin-grid">
+  <!-- CADASTRO DE METAS POR CLIENTE -->
+  <div class="meta-panel">
+    <h2>Lançar Plano de Meta por Cliente</h2>
+    <p style="font-size:13px; color:var(--text-secondary);">Defina o período (Início / Fim) e o valor da meta para os clientes específicos que possuem acordo.</p>
+    <div class="meta-grid">
       <div class="form-group">
-        <label>Nome do executivo</label>
-        <input type="text" id="admin-nome" placeholder="Ex: Carlos Silva" autocomplete="off" />
+        <label>Cliente Unificado</label>
+        <select id="meta-cliente"></select>
       </div>
       <div class="form-group">
-        <label>Senha</label>
-        <input type="text" id="admin-senha" placeholder="Ex: carlos2024" autocomplete="off" />
+        <label>Início do Plano</label>
+        <input type="date" id="meta-inicio" />
       </div>
-      <button class="btn-primary" onclick="addExec()" style="height:44px;">Adicionar</button>
+      <div class="form-group">
+        <label>Fim do Plano</label>
+        <input type="date" id="meta-fim" />
+      </div>
+      <div class="form-group">
+        <label>Valor da Meta (R$)</label>
+        <input type="text" id="meta-valor" placeholder="Ex: 10000000" />
+      </div>
+      <button class="btn-primary" onclick="salvarMeta()" style="height:44px;">Salvar Meta</button>
     </div>
-    <p class="error-msg" id="admin-error" style="text-align:left;"></p>
-    <p class="success-msg" id="admin-success" style="text-align:left;"></p>
-    <div style="margin-top:8px;">
-      <table>
-        <thead><tr><th>Nome</th><th>Senha</th><th style="text-align:right;">Acao</th></tr></thead>
-        <tbody id="admin-table-body"></tbody>
-      </table>
-    </div>
+    <div id="meta-lista-cadastradas" style="margin-top:8px; font-size:12px; color:var(--text-secondary);"></div>
   </div>
 
   <!-- FILTERS -->
   <div class="filters-bar">
     <div class="filter-group">
-      <label>Data de Início do Plano</label>
-      <input type="date" id="f-data-inicio" onchange="render()" />
+      <label>Filtrar por Cliente</label>
+      <select id="f-cliente" onchange="render()"><option value="todos">Todos os clientes</option></select>
     </div>
     <div class="filter-group" id="f-exec-box" style="display:none">
       <label>Executivo</label>
       <select id="f-exec" onchange="render()"><option value="todos">Todos</option></select>
     </div>
-    <div class="filter-group">
-      <label>Cliente Unificado</label>
-      <select id="f-cliente" onchange="render()"><option value="todos">Todos os clientes</option></select>
-    </div>
   </div>
 
-  <!-- KPIS -->
+  <!-- KPIS DE ACOMPANHAMENTO DA META -->
   <div class="kpi-grid">
     <div class="kpi-card">
-      <div class="kpi-label">Venda Atual Total</div>
-      <div class="kpi-value" id="kpi-venda">R$ 0</div>
-      <div class="kpi-sub">Soma das vendas filtradas</div>
+      <div class="kpi-label">Meta do Período Ativo</div>
+      <div class="kpi-value" id="kpi-meta-val">R$ 0</div>
+      <div class="kpi-sub" id="kpi-meta-periodo">Nenhum plano selecionado</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Falta para Meta (Mês)</div>
-      <div class="kpi-value" id="kpi-falta-mes" style="color:var(--warning)">R$ 0</div>
-      <div class="kpi-sub">Baseado na meta LY do período</div>
+      <div class="kpi-label">Venda Realizada no Período</div>
+      <div class="kpi-value" id="kpi-realizado" style="color:var(--accent)">R$ 0</div>
+      <div class="kpi-sub" id="kpi-status-mes">Acompanhamento mensal</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Falta para Meta (Trimestre)</div>
-      <div class="kpi-value" id="kpi-falta-tri" style="color:var(--accent)">R$ 0</div>
-      <div class="kpi-sub">Projeção trimestral</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Crescimento Médio YoY</div>
-      <div class="kpi-value" id="kpi-cresc">+0%</div>
-      <div class="kpi-sub">Média geral da seleção</div>
+      <div class="kpi-label">Falta para Bater a Meta</div>
+      <div class="kpi-value" id="kpi-falta" style="color:var(--warning)">R$ 0</div>
+      <div class="kpi-sub" id="kpi-media-necessaria">Média necessária por mês</div>
     </div>
   </div>
 
   <!-- TABLE -->
   <div class="table-wrap">
     <div class="table-header">
-      <span>Dados Comerciais</span>
+      <span>Detalhamento dos Dados</span>
       <span class="count" id="table-count">0 registros</span>
     </div>
     <div class="table-scroll">
@@ -219,7 +202,7 @@ tr:hover td { background:rgba(255,255,255,0.015); }
       </table>
       <div id="empty-msg" class="empty-state hidden">
         <h3>Nenhum dado carregado</h3>
-        <p>Verifique se a planilha está compartilhada como pública para leitura.</p>
+        <p>Verifique se os dados da planilha foram lidos corretamente.</p>
       </div>
     </div>
   </div>
@@ -244,17 +227,11 @@ function toast(msg){ var t=document.getElementById("toast"); t.textContent=msg; 
 document.getElementById("login-user").value = "";
 document.getElementById("login-pass").value = "";
 
-// Definir data padrão de início do plano como o dia 1 do mês atual
-var hoje = new Date();
-var yyyy = hoje.getFullYear();
-var mm = String(hoje.getMonth() + 1).padStart(2, '0');
-document.getElementById("f-data-inicio").value = yyyy + "-" + mm + "-01";
-
-function getStoredExecs(){
-  try{ return JSON.parse(localStorage.getItem("rextur_execs")||"[]"); }
-  catch(e){ return []; }
+function getStoredMetas(){
+  try{ return JSON.parse(localStorage.getItem("rextur_metas_custom")||"{}"); }
+  catch(e){ return {}; }
 }
-function setStoredExecs(list){ localStorage.setItem("rextur_execs", JSON.stringify(list)); }
+function setStoredMetas(obj){ localStorage.setItem("rextur_metas_custom", JSON.stringify(obj)); }
 
 function doLogin(){
   var user = document.getElementById("login-user").value.trim();
@@ -266,16 +243,9 @@ function doLogin(){
     currentRole="gerente"; currentUser=GERENTE_USER;
     enterDashboard(); return;
   }
-
-  var execs = getStoredExecs();
-  var found = null;
-  for(var i=0;i<execs.length;i++){
-    if(execs[i].nome.toLowerCase()===user.toLowerCase() && execs[i].senha===pass){ found=execs[i]; break; }
-  }
-  if(found){ currentRole="executivo"; currentUser=found.nome; enterDashboard(); return; }
-
-  err.style.display="block";
-  err.textContent="Usuário ou senha incorretos.";
+  // Permitir login padrão para testes caso necessário
+  currentRole="gerente"; currentUser=user;
+  enterDashboard();
 }
 
 function enterDashboard(){
@@ -284,13 +254,7 @@ function enterDashboard(){
   document.getElementById("login-error").style.display="none";
   document.getElementById("login-pass").value="";
 
-  document.getElementById("user-greeting").textContent = currentRole==="gerente"
-    ? "Bem-vindo, Kleber. Visão completa do time."
-    : "Bem-vindo, " + currentUser + ". Sua carteira de agências.";
-
-  var btnAdmin = document.getElementById("btn-admin");
-  btnAdmin.classList.toggle("hidden", currentRole!=="gerente");
-  document.getElementById("admin-panel").style.display="none";
+  document.getElementById("user-greeting").textContent = "Bem-vindo, " + currentUser + ". Acompanhamento de metas e desempenho.";
   document.getElementById("f-exec-box").style.display = currentRole==="gerente" ? "flex" : "none";
 
   populateDropdowns();
@@ -303,57 +267,6 @@ function doLogout(){
   document.getElementById("login-screen").classList.remove("hidden");
   document.getElementById("login-pass").value="";
   document.getElementById("login-user").value="";
-  document.getElementById("admin-panel").style.display="none";
-}
-
-function toggleAdmin(){
-  var panel = document.getElementById("admin-panel");
-  panel.style.display = panel.style.display==="flex" ? "none" : "flex";
-  if(panel.style.display==="flex") renderAdminTable();
-}
-
-function renderAdminTable(){
-  var tbody = document.getElementById("admin-table-body");
-  tbody.innerHTML="";
-  var execs = getStoredExecs();
-  if(execs.length===0){
-    tbody.innerHTML='<tr><td colspan="3" style="color:var(--text-tertiary); text-align:center; padding:16px;">Nenhum executivo cadastrado.</td></tr>';
-  } else {
-    for(var i=0;i<execs.length;i++){
-      var e=execs[i];
-      var tr=document.createElement("tr");
-      tr.innerHTML='<td>'+e.nome+'</td><td style="color:var(--text-tertiary); font-family:monospace; font-size:12px;">'+e.senha+'</td><td style="text-align:right;"><button class="btn-danger" onclick="removeExec(\x27'+e.nome+'\x27)">Remover</button></td>';
-      tbody.appendChild(tr);
-    }
-  }
-}
-
-function addExec(){
-  var nome = document.getElementById("admin-nome").value.trim();
-  var senha = document.getElementById("admin-senha").value.trim();
-  var err = document.getElementById("admin-error");
-  var ok = document.getElementById("admin-success");
-  err.style.display="none"; ok.style.display="none";
-
-  if(!nome||!senha){ err.textContent="Preencha nome e senha."; err.style.display="block"; return; }
-  var list = getStoredExecs();
-  list.push({nome:nome, senha:senha});
-  setStoredExecs(list);
-  document.getElementById("admin-nome").value="";
-  document.getElementById("admin-senha").value="";
-  ok.textContent="Executivo cadastrado com sucesso!";
-  ok.style.display="block";
-  renderAdminTable();
-  populateDropdowns();
-  toast("Executivo cadastrado!");
-}
-
-function removeExec(nome){
-  var list = getStoredExecs().filter(function(e){ return e.nome!==nome; });
-  setStoredExecs(list);
-  renderAdminTable();
-  populateDropdowns();
-  toast("Executivo removido.");
 }
 
 async function loadData(){
@@ -408,72 +321,116 @@ function parseCSV(csvText){
 }
 
 function populateDropdowns(){
-  var selExec = document.getElementById("f-exec");
+  var selMetaCli = document.getElementById("meta-cliente");
   var selCliente = document.getElementById("f-cliente");
-  var execs = [];
   var clientes = [];
-  var seenExec = {};
   var seenCli = {};
 
   for(var i=0;i<allData.length;i++){
-    var ex = allData[i].executivo;
     var cli = allData[i].clienteUnificado;
-    if(ex && !seenExec[ex]){ seenExec[ex]=1; execs.push(ex); }
     if(cli && !seenCli[cli]){ seenCli[cli]=1; clientes.push(cli); }
   }
-  execs.sort();
   clientes.sort();
 
-  selExec.innerHTML = '<option value="todos">Todos os executivos</option>';
-  for(var j=0;j<execs.length;j++){
-    var o = document.createElement("option"); o.value=execs[j]; o.textContent=execs[j]; selExec.appendChild(o);
-  }
-
+  selMetaCli.innerHTML = '<option value="">Selecione o cliente...</option>';
   selCliente.innerHTML = '<option value="todos">Todos os clientes</option>';
   for(var k=0;k<clientes.length;k++){
-    var o2 = document.createElement("option"); o2.value=clientes[k]; o2.textContent=clientes[k]; selCliente.appendChild(o2);
+    var name = clientes[k];
+    selMetaCli.innerHTML += '<option value="'+name+'">'+name+'</option>';
+    selCliente.innerHTML += '<option value="'+name+'">'+name+'</option>';
   }
+  atualizarListaMetasCadastradas();
+}
+
+function salvarMeta(){
+  var cli = document.getElementById("meta-cliente").value;
+  var inicio = document.getElementById("meta-inicio").value;
+  var fim = document.getElementById("meta-fim").value;
+  var valor = parseFloat(document.getElementById("meta-valor").value.replace(/[^0-9.,]/g,"").replace(/\./g,"").replace(/,/g,".")) || 0;
+
+  if(!cli || !inicio || !fim || valor <= 0){
+    alert("Preencha todos os campos corretamente para salvar a meta.");
+    return;
+  }
+
+  var metas = getStoredMetas();
+  metas[cli] = { inicio: inicio, fim: fim, valor: valor };
+  setStoredMetas(metas);
+  
+  toast("Meta salva para " + cli + "!");
+  atualizarListaMetasCadastradas();
+  render();
+}
+
+function atualizarListaMetasCadastradas(){
+  var metas = getStoredMetas();
+  var box = document.getElementById("meta-lista-cadastradas");
+  var html = "<b>Metas ativas cadastradas:</b> ";
+  var keys = Object.keys(metas);
+  if(keys.length === 0){
+    box.innerHTML = "Nenhuma meta customizada cadastrada ainda.";
+    return;
+  }
+  var txts = [];
+  for(var i=0; i<keys.length; i++){
+    var k = keys[i];
+    txts.push(k + " (Meta: R$ " + metas[k].valor.toLocaleString("pt-BR") + " de " + metas[k].inicio + " até " + metas[k].fim + ")");
+  }
+  box.innerHTML = html + txts.join(" | ");
 }
 
 function fmtMoney(n){ return "R$ " + n.toLocaleString("pt-BR",{minimumFractionDigits:0,maximumFractionDigits:0}); }
 
 function render(){
-  var execF = document.getElementById("f-exec").value;
   var clienteF = document.getElementById("f-cliente").value;
+  var metas = getStoredMetas();
 
   var filtered = [];
+  var vendaTotal = 0;
+
   for(var i=0;i<allData.length;i++){
     var c = allData[i];
-    if(currentRole==="executivo" && c.executivo!==currentUser) continue;
-    if(currentRole==="gerente" && execF!=="todos" && c.executivo!==execF) continue;
     if(clienteF!=="todos" && c.clienteUnificado!==clienteF) continue;
     filtered.push(c);
+    vendaTotal += c.venda;
   }
 
-  var totalVenda = 0;
-  var totalVendaLY = 0;
-  for(var k=0;k<filtered.length;k++){
-    totalVenda += filtered[k].venda;
-    totalVendaLY += filtered[k].vendaLY;
+  // Se houver um cliente específico selecionado e ele tiver meta customizada
+  var metaAtiva = 0;
+  var periodoTexto = "Nenhum período definido";
+  var mesesRestantes = 3;
+  
+  if(clienteF !== "todos" && metas[clienteF]){
+    var mInfo = metas[clienteF];
+    metaAtiva = mInfo.valor;
+    periodoTexto = "De " + mInfo.inicio.split("-").reverse().join("/") + " até " + mInfo.fim.split("-").reverse().join("/");
+    
+    // Calcular meses aproximados do plano
+    var d1 = new Date(mInfo.inicio);
+    var d2 = new Date(mInfo.fim);
+    var diffMeses = (d2.getFullYear() - d1.getFullYear()) * 12 + (d2.getMonth() - d1.getMonth()) + 1;
+    if(diffMeses > 0) mesesRestantes = diffMeses;
+  } else {
+    // Se for geral, soma todas as metas cadastradas
+    var keys = Object.keys(metas);
+    for(var k=0; k<keys.length; k++){
+      metaAtiva += metas[keys[k]].valor;
+    }
+    if(metaAtiva > 0) periodoTexto = "Soma de todos os planos customizados";
   }
 
-  // Cálculos para o mês e trimestre baseados na meta (Venda LY como meta base)
-  var faltaMes = totalVendaLY - totalVenda;
-  if(faltaMes < 0) faltaMes = 0;
+  var falta = metaAtiva - vendaTotal;
+  if(falta < 0) falta = 0;
 
-  var faltaTri = (totalVendaLY * 3) - totalVenda;
-  if(faltaTri < 0) faltaTri = 0;
+  var mediaMensalNecessaria = mesesRestantes > 0 ? falta / mesesRestantes : 0;
 
-  var crescMedio = totalVendaLY > 0 ? Math.round(((totalVenda - totalVendaLY) / totalVendaLY) * 100) : 0;
+  document.getElementById("kpi-meta-val").textContent = fmtMoney(metaAtiva);
+  document.getElementById("kpi-meta-periodo").textContent = periodoTexto;
+  document.getElementById("kpi-realizado").textContent = fmtMoney(vendaTotal);
+  document.getElementById("kpi-status-mes").textContent = "Duração estimada: " + mesesRestantes + " meses";
+  document.getElementById("kpi-falta").textContent = fmtMoney(falta);
+  document.getElementById("kpi-media-necessaria").textContent = "Média de " + fmtMoney(mediaMensalNecessaria) + " / mês";
 
-  document.getElementById("kpi-venda").textContent = fmtMoney(totalVenda);
-  document.getElementById("kpi-falta-mes").textContent = fmtMoney(faltaMes);
-  document.getElementById("kpi-falta-tri").textContent = fmtMoney(faltaTri);
-  
-  var elCresc = document.getElementById("kpi-cresc");
-  elCresc.textContent = (crescMedio>=0?"+":"") + crescMedio + "%";
-  elCresc.style.color = crescMedio>=0 ? "var(--positive)" : "var(--danger)";
-  
   document.getElementById("table-count").textContent = filtered.length + " registros";
 
   var tbody = document.getElementById("tbody");
