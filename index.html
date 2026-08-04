@@ -30,8 +30,8 @@ body { font-family:var(--font); background:var(--bg); color:var(--text-primary);
 .form-group input:focus, .form-group select:focus { border-color:var(--accent); }
 .btn-primary { padding:13px; border-radius:10px; border:none; background:var(--text-primary); color:var(--bg); font-size:15px; font-weight:600; cursor:pointer; transition:opacity .2s; }
 .btn-primary:hover { opacity:.85; }
-.btn-ghost { padding:10px 14px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text-secondary); font-size:13px; cursor:pointer; font-family:inherit; }
-.btn-ghost:hover { background:var(--surface-raised); }
+.btn-ghost { padding:10px 14px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text-secondary); font-size:13px; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px; }
+.btn-ghost:hover { background:var(--surface-raised); color:var(--text-primary); }
 .error-msg { font-size:13px; color:var(--danger); text-align:center; display:none; margin-top:4px; }
 
 #dash-screen { display:none; flex-direction:column; gap:18px; padding:20px; max-width:1300px; margin:0 auto; }
@@ -57,9 +57,6 @@ body { font-family:var(--font); background:var(--bg); color:var(--text-primary);
 .kpi-label { font-size:12px; color:var(--text-tertiary); font-weight:500; }
 .kpi-value { font-size:24px; font-weight:600; font-variant-numeric:tabular-nums; }
 .kpi-sub { font-size:12px; color:var(--text-tertiary); }
-
-.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
-@media(max-width:800px){ .grid-2 { grid-template-columns:1fr; } }
 
 .card-box { padding:18px; border-radius:12px; border:1px solid var(--border); background:var(--surface); display:flex; flex-direction:column; gap:12px; }
 .card-box h3 { font-size:14px; font-weight:600; color:var(--text-secondary); text-transform:uppercase; letter-spacing:0.5px; }
@@ -149,6 +146,14 @@ tr:hover td { background:rgba(255,255,255,0.015); }
       <p id="user-greeting"></p>
     </div>
     <div class="dash-actions">
+      <button class="btn-ghost" onclick="voltarHome()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        Home
+      </button>
+      <button class="btn-ghost" onclick="limparFiltros()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        Limpar Filtros
+      </button>
       <button class="btn-ghost" onclick="doLogout()">Sair</button>
     </div>
   </div>
@@ -180,21 +185,11 @@ tr:hover td { background:rgba(255,255,255,0.015); }
     </div>
   </div>
 
-  <!-- GRID DE CURVA ABC E INFORMAÇÕES -->
-  <div class="grid-2">
-    <div class="card-box">
-      <h3>Curva ABC por Executivo</h3>
-      <p style="font-size:12px; color:var(--text-secondary);">Classificação de faturamento dos clientes de cada executivo (A: Top 80%, B: 15%, C: 5%).</p>
-      <div id="abc-container" style="display:flex; flex-direction:column; gap:8px; max-height:220px; overflow-y:auto;"></div>
-    </div>
-    <div class="card-box">
-      <h3>Resumo do Painel</h3>
-      <p style="font-size:12px; color:var(--text-secondary);">Dicas de navegação:</p>
-      <ul style="font-size:13px; color:var(--text-secondary); padding-left:18px; display:flex; flex-direction:column; gap:6px;">
-        <li>Clique no nome de qualquer agência na tabela para cadastrar o plano e a meta de vendas.</li>
-        <li>Clique no card "Agências com Plano de Meta" para focar apenas nas contas que possuem acordos ativos.</li>
-      </ul>
-    </div>
+  <!-- CURVA ABC DETALHADA POR EXECUTIVO -->
+  <div class="card-box">
+    <h3>Curva ABC por Executivo (Clientes que representam 80% do Volume - Grupo A)</h3>
+    <p style="font-size:12px; color:var(--text-secondary);">Detalhamento do faturamento por executivo, destacando os clientes do grupo A (80% das vendas), grupo B (15%) e grupo C (5%).</p>
+    <div id="abc-container" style="display:flex; flex-direction:column; gap:12px; max-height:300px; overflow-y:auto; margin-top:4px;"></div>
   </div>
 
   <!-- TABLE -->
@@ -263,6 +258,22 @@ function doLogin(){
 function doLogout(){
   document.getElementById("dash-screen").style.display="none";
   document.getElementById("login-screen").classList.remove("hidden");
+}
+
+function voltarHome(){
+  limparFiltros();
+  apenasComMetaAtiva = false;
+  document.getElementById("table-title").textContent = "Todas as Agências (Clique no nome para editar meta)";
+  render();
+  toast("Retornado à página inicial.");
+}
+
+function limparFiltros(){
+  document.getElementById("f-cliente").value = "todos";
+  apenasComMetaAtiva = false;
+  document.getElementById("table-title").textContent = "Todas as Agências (Clique no nome para editar meta)";
+  render();
+  toast("Filtros limpos com sucesso.");
 }
 
 async function loadData(){
@@ -386,7 +397,6 @@ function render(){
   var somaMetasAtivas = 0;
   var vendaTotal = 0;
 
-  // Analisar dados de curva ABC por executivo
   var execsData = {};
 
   for(var i=0;i<allData.length;i++){
@@ -404,7 +414,6 @@ function render(){
     filtered.push(c);
     vendaTotal += c.venda;
 
-    // Agrupar por executivo para Curva ABC
     if(!execsData[c.executivo]) execsData[c.executivo] = [];
     execsData[c.executivo].push(c);
   }
@@ -414,7 +423,7 @@ function render(){
   document.getElementById("kpi-soma-metas").textContent = fmtMoney(somaMetasAtivas);
   document.getElementById("table-count").textContent = filtered.length + " registros";
 
-  // Renderizar Curva ABC por executivo
+  // Renderizar Curva ABC detalhada por executivo (Listando os nomes do Grupo A - 80%)
   var abcBox = document.getElementById("abc-container");
   abcBox.innerHTML = "";
   var execNames = Object.keys(execsData);
@@ -422,27 +431,36 @@ function render(){
   for(var e=0; e<execNames.length; e++){
     var exName = execNames[e];
     var listaCli = execsData[exName];
-    // Ordenar da maior venda para menor
     listaCli.sort(function(a,b){ return b.venda - a.venda; });
     
     var subTotal = 0;
     for(var l=0; l<listaCli.length; l++) subTotal += listaCli[l].venda;
 
     var acumulado = 0;
-    var qtdA = 0, qtdB = 0, qtdC = 0;
+    var clientesA = [];
+    var clientesB = [];
+    var clientesC = [];
 
     for(var x=0; x<listaCli.length; x++){
       acumulado += listaCli[x].venda;
       var pct = subTotal > 0 ? (acumulado / subTotal) : 0;
-      if(pct <= 0.8) qtdA++;
-      else if(pct <= 0.95) qtdB++;
-      else qtdC++;
+      if(pct <= 0.8){
+        clientesA.push(listaCli[x].clienteUnificado + " (" + fmtMoney(listaCli[x].venda) + ")");
+      } else if(pct <= 0.95){
+        clientesB.push(listaCli[x].clienteUnificado);
+      } else {
+        clientesC.push(listaCli[x].clienteUnificado);
+      }
     }
 
     var div = document.createElement("div");
-    div.style.cssText = "display:flex; justify-content:space-between; align-items:center; padding:8px 10px; background:var(--surface-raised); border-radius:8px; font-size:13px;";
-    div.innerHTML = '<span><b>'+exName+'</b></span>' +
-                    '<span style="display:flex; gap:10px;"><span style="color:var(--positive)">A: '+qtdA+'</span><span style="color:var(--warning)">B: '+qtdB+'</span><span style="color:var(--text-tertiary)">C: '+qtdC+'</span></span>';
+    div.style.cssText = "display:flex; flex-direction:column; gap:4px; padding:10px 12px; background:var(--surface-raised); border-radius:8px; font-size:13px;";
+    div.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center;">' +
+                    '<b>Executivo: ' + exName + '</b>' +
+                    '<span style="font-size:11px; color:var(--text-tertiary);">Total: ' + fmtMoney(subTotal) + '</span>' +
+                    '</div>' +
+                    '<div style="font-size:12px; color:var(--text-secondary);"><b>Grupo A (80% do volume):</b> ' + (clientesA.length ? clientesA.join(", ") : "Nenhum") + '</div>' +
+                    '<div style="font-size:11px; color:var(--text-tertiary);"><b>Grupo B (15%):</b> ' + (clientesB.length ? clientesB.length + " clientes" : "Nenhum") + ' | <b>Grupo C (5%):</b> ' + (clientesC.length ? clientesC.length + " clientes" : "Nenhum") + '</div>';
     abcBox.appendChild(div);
   }
 
