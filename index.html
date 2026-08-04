@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle Comercial — Dashboard de Metas</title>
+<title>Controle Comercial — Gestão de Usuários e Senhas</title>
 <style>
 :root {
   --bg:#0a0a0a; --surface:#141414; --surface-raised:#1e1e1e; --border:#2a2a2a;
@@ -32,7 +32,9 @@ body { font-family:var(--font); background:var(--bg); color:var(--text-primary);
 .btn-primary:hover { opacity:.85; }
 .btn-ghost { padding:10px 14px; border-radius:8px; border:1px solid var(--border); background:transparent; color:var(--text-secondary); font-size:13px; cursor:pointer; font-family:inherit; display:inline-flex; align-items:center; gap:6px; }
 .btn-ghost:hover { background:var(--surface-raised); color:var(--text-primary); }
+.btn-danger { padding:8px 12px; border-radius:6px; border:none; background:var(--danger); color:#fff; font-size:12px; cursor:pointer; font-weight:600; }
 .error-msg { font-size:13px; color:var(--danger); text-align:center; display:none; margin-top:4px; }
+.success-msg { font-size:13px; color:var(--positive); text-align:center; display:none; margin-top:4px; }
 
 #dash-screen { display:none; flex-direction:column; gap:18px; padding:20px; max-width:1300px; margin:0 auto; }
 .dash-header { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:12px; }
@@ -40,7 +42,7 @@ body { font-family:var(--font); background:var(--bg); color:var(--text-primary);
 .dash-header p { font-size:13px; color:var(--text-secondary); margin-top:2px; }
 .dash-actions { display:flex; gap:8px; flex-wrap:wrap; }
 
-/* MODAL / TELA DE LANÇAMENTO DE META */
+/* MODAL / TELA DE LANÇAMENTO DE META E SENHA */
 .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center; z-index:500; padding:20px; }
 .modal-card { background:var(--surface); border:1px solid var(--border); border-radius:16px; padding:24px; width:100%; max-width:450px; display:flex; flex-direction:column; gap:16px; }
 .modal-card h3 { font-size:18px; font-weight:600; }
@@ -117,7 +119,6 @@ tr:hover td { background:rgba(255,255,255,0.015); }
   <div class="modal-card">
     <h3 id="modal-titulo">Definir Meta</h3>
     <p style="font-size:13px; color:var(--text-secondary);">Informe o período do plano e o valor da meta para este cliente.</p>
-    
     <div class="form-group">
       <label>Início do Plano</label>
       <input type="date" id="modal-inicio" />
@@ -130,10 +131,25 @@ tr:hover td { background:rgba(255,255,255,0.015); }
       <label>Valor da Meta (R$)</label>
       <input type="text" id="modal-valor" placeholder="Ex: 10000000" />
     </div>
-
     <div style="display:flex; gap:8px; margin-top:8px;">
       <button class="btn-primary" onclick="salvarModalMeta()" style="flex:1;">Salvar Meta</button>
-      <button class="btn-ghost" onclick="fecharModal()" style="flex:1;">Cancelar</button>
+      <button class="btn-ghost" onclick="fecharModalMeta()" style="flex:1;">Cancelar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL PARA ALTERAR SENHA -->
+<div id="modal-senha" class="modal-overlay hidden">
+  <div class="modal-card">
+    <h3>Alterar Minha Senha</h3>
+    <p style="font-size:13px; color:var(--text-secondary);">Digite sua nova senha para os próximos acessos.</p>
+    <div class="form-group">
+      <label>Nova Senha</label>
+      <input type="password" id="nova-senha-input" placeholder="Digite a nova senha" />
+    </div>
+    <div style="display:flex; gap:8px; margin-top:8px;">
+      <button class="btn-primary" onclick="salvarNovaSenha()" style="flex:1;">Atualizar Senha</button>
+      <button class="btn-ghost" onclick="fecharModalSenha()" style="flex:1;">Cancelar</button>
     </div>
   </div>
 </div>
@@ -153,6 +169,9 @@ tr:hover td { background:rgba(255,255,255,0.015); }
       <button class="btn-ghost" onclick="limparFiltros()">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         Limpar Filtros
+      </button>
+      <button class="btn-ghost" onclick="abrirModalSenha()">
+        Alterar Senha
       </button>
       <button class="btn-ghost" onclick="doLogout()">Sair</button>
     </div>
@@ -174,7 +193,7 @@ tr:hover td { background:rgba(255,255,255,0.015); }
       <div class="kpi-sub">Clique para listar as agências com metas ativas</div>
     </div>
     <div class="kpi-card">
-      <div class="kpi-label">Venda Total Selecionada</div>
+      <div class="kpi-label">Venda Total Geral</div>
       <div class="kpi-value" id="kpi-venda-total">R$ 0</div>
       <div class="kpi-sub">Acumulado do período</div>
     </div>
@@ -185,11 +204,11 @@ tr:hover td { background:rgba(255,255,255,0.015); }
     </div>
   </div>
 
-  <!-- CURVA ABC DETALHADA POR EXECUTIVO -->
+  <!-- CURVA ABC GERAL (80%) -->
   <div class="card-box">
-    <h3>Curva ABC por Executivo (Clientes que representam 80% do Volume - Grupo A)</h3>
-    <p style="font-size:12px; color:var(--text-secondary);">Detalhamento do faturamento por executivo, destacando os clientes do grupo A (80% das vendas), grupo B (15%) e grupo C (5%).</p>
-    <div id="abc-container" style="display:flex; flex-direction:column; gap:12px; max-height:300px; overflow-y:auto; margin-top:4px;"></div>
+    <h3>Curva ABC Geral — Clientes que representam 80% do Volume Total de Vendas (Grupo A)</h3>
+    <p style="font-size:12px; color:var(--text-secondary);">Listagem de todos os clientes ordenados por faturamento decrescente cuja soma atinge exatamente 80% do volume geral da empresa.</p>
+    <div id="abc-container" style="display:flex; flex-direction:column; gap:8px; max-height:280px; overflow-y:auto; margin-top:4px;"></div>
   </div>
 
   <!-- TABLE -->
@@ -207,9 +226,9 @@ tr:hover td { background:rgba(255,255,255,0.015); }
             <th>CPFCNPJ</th>
             <th>Regional</th>
             <th class="center">Venda</th>
+            <th class="center">% Part. Total</th>
             <th class="center">Término Meta</th>
             <th class="center">Meta Ativa</th>
-            <th class="center">% YoY</th>
           </tr>
         </thead>
         <tbody id="tbody"></tbody>
@@ -228,6 +247,7 @@ const SHEET_GID = "0";
 
 let allData = [];
 let currentClientModal = "";
+let currentUserLogged = "";
 let apenasComMetaAtiva = false;
 
 function showLoading(){ document.getElementById("loading").classList.remove("hidden"); }
@@ -237,6 +257,22 @@ function toast(msg){ var t=document.getElementById("toast"); t.textContent=msg; 
 document.getElementById("login-user").value = "";
 document.getElementById("login-pass").value = "";
 
+/* GERENCIAMENTO DE USUÁRIOS E SENHAS NO LOCALSTORAGE */
+function getStoredUsers(){
+  var defaultUsers = {
+    "kleber": "admin123",
+    "carlos": "carlos123"
+  };
+  try{
+    var saved = JSON.parse(localStorage.getItem("rextur_users_db"));
+    return saved ? saved : defaultUsers;
+  }catch(e){ return defaultUsers; }
+}
+
+function saveStoredUsers(usersObj){
+  localStorage.setItem("rextur_users_db", JSON.stringify(usersObj));
+}
+
 function getStoredMetas(){
   try{ return JSON.parse(localStorage.getItem("rextur_metas_custom")||"{}"); }
   catch(e){ return {}; }
@@ -244,20 +280,59 @@ function getStoredMetas(){
 function setStoredMetas(obj){ localStorage.setItem("rextur_metas_custom", JSON.stringify(obj)); }
 
 function doLogin(){
-  var user = document.getElementById("login-user").value.trim();
+  var user = document.getElementById("login-user").value.trim().toLowerCase();
   var pass = document.getElementById("login-pass").value;
-  if(!user||!pass){ document.getElementById("login-error").style.display="block"; return; }
+  var err = document.getElementById("login-error");
+  
+  if(!user || !pass){ err.style.display="block"; err.textContent="Preencha usuário e senha."; return; }
 
-  document.getElementById("login-screen").classList.add("hidden");
-  document.getElementById("dash-screen").style.display="flex";
-  document.getElementById("user-greeting").textContent = "Bem-vindo, " + user + ".";
+  var usersDb = getStoredUsers();
 
-  loadData();
+  // Se o usuário não existe, já cadastramos automaticamente (novo usuário salvo)
+  if(!usersDb[user]){
+    usersDb[user] = pass;
+    saveStoredUsers(usersDb);
+  }
+
+  if(usersDb[user] === pass){
+    currentUserLogged = user;
+    err.style.display="none";
+    document.getElementById("login-screen").classList.add("hidden");
+    document.getElementById("dash-screen").style.display="flex";
+    document.getElementById("user-greeting").textContent = "Bem-vindo, " + user.toUpperCase() + ".";
+    loadData();
+  } else {
+    err.style.display="block";
+    err.textContent="Usuário ou senha incorretos.";
+  }
 }
 
 function doLogout(){
+  currentUserLogged = "";
   document.getElementById("dash-screen").style.display="none";
   document.getElementById("login-screen").classList.remove("hidden");
+  document.getElementById("login-pass").value="";
+}
+
+function abrirModalSenha(){
+  document.getElementById("nova-senha-input").value = "";
+  document.getElementById("modal-senha").classList.remove("hidden");
+}
+
+function fecharModalSenha(){
+  document.getElementById("modal-senha").classList.add("hidden");
+}
+
+function salvarNovaSenha(){
+  var novaSenha = document.getElementById("nova-senha-input").value.trim();
+  if(!novaSenha){ alert("Digite uma senha válida."); return; }
+
+  var usersDb = getStoredUsers();
+  usersDb[currentUserLogged] = novaSenha;
+  saveStoredUsers(usersDb);
+
+  toast("Senha atualizada com sucesso para os próximos logins!");
+  fecharModalSenha();
 }
 
 function voltarHome(){
@@ -308,7 +383,6 @@ function parseCSV(csvText){
     
     var venda = parseFloat((obj["Venda"] || "0").replace(/[^0-9.,\-]/g,"").replace(/\./g,"").replace(/,/g,".")) || 0;
     var vendaLY = parseFloat((obj["Venda LY"] || "0").replace(/[^0-9.,\-]/g,"").replace(/\./g,"").replace(/,/g,".")) || 0;
-    var yoy = obj["% YoY"] || (vendaLY > 0 ? Math.round(((venda - vendaLY) / vendaLY) * 100) + "%" : "0%");
 
     if(!clienteUnificado || clienteUnificado.toLowerCase()==="total") continue;
 
@@ -318,8 +392,7 @@ function parseCSV(csvText){
       cpfCnpj: cpfCnpj,
       regional: regional,
       venda: venda,
-      vendaLY: vendaLY,
-      yoy: yoy
+      vendaLY: vendaLY
     });
   }
   return out;
@@ -357,7 +430,7 @@ function abrirModalMeta(nomeCliente){
   document.getElementById("modal-meta").classList.remove("hidden");
 }
 
-function fecharModal(){
+function fecharModalMeta(){
   document.getElementById("modal-meta").classList.add("hidden");
 }
 
@@ -376,7 +449,7 @@ function salvarModalMeta(){
   setStoredMetas(metas);
   
   toast("Meta salva para " + currentClientModal + "!");
-  fecharModal();
+  fecharModalMeta();
   render();
 }
 
@@ -392,15 +465,48 @@ function render(){
   var clienteF = document.getElementById("f-cliente").value;
   var metas = getStoredMetas();
 
+  var vendaTotalGeral = 0;
+  for(var i=0; i<allData.length; i++){
+    vendaTotalGeral += allData[i].venda;
+  }
+
+  var sortedAll = [...allData].sort(function(a,b){ return b.venda - a.venda; });
+  var acumuladoGeral = 0;
+  var grupoA = [];
+  var grupoB = [];
+  var grupoC = [];
+
+  for(var s=0; s<sortedAll.length; s++){
+    var cliObj = sortedAll[s];
+    var part = vendaTotalGeral > 0 ? (cliObj.venda / vendaTotalGeral) : 0;
+    acumuladoGeral += cliObj.venda;
+    var pctAcumulado = vendaTotalGeral > 0 ? (acumuladoGeral / vendaTotalGeral) : 0;
+
+    var itemDesc = cliObj.clienteUnificado + " (" + fmtMoney(cliObj.venda) + " - " + (part * 100).toFixed(1) + "%)";
+
+    if(pctAcumulado <= 0.80 || grupoA.length === 0){
+      grupoA.push(itemDesc);
+    } else if(pctAcumulado <= 0.95){
+      grupoB.push(itemDesc);
+    } else {
+      grupoC.push(itemDesc);
+    }
+  }
+
+  var abcBox = document.getElementById("abc-container");
+  abcBox.innerHTML = '<div style="padding:10px 12px; background:var(--surface-raised); border-radius:8px; font-size:13px; display:flex; flex-direction:column; gap:6px;">' +
+                     '<div style="color:var(--positive);"><b>Grupo A (Representam os primeiros 80% das vendas):</b> ' + grupoA.join(", ") + '</div>' +
+                     '<div style="color:var(--warning); font-size:12px;"><b>Grupo B (Próximos 15%):</b> ' + (grupoB.length ? grupoB.length + " clientes" : "Nenhum") + '</div>' +
+                     '<div style="color:var(--text-tertiary); font-size:12px;"><b>Grupo C (Últimos 5%):</b> ' + (grupoC.length ? grupoC.length + " clientes" : "Nenhum") + '</div>' +
+                     '</div>';
+
   var filtered = [];
   var qtdMetasAtivas = 0;
   var somaMetasAtivas = 0;
-  var vendaTotal = 0;
+  var vendaTotalFiltrada = 0;
 
-  var execsData = {};
-
-  for(var i=0;i<allData.length;i++){
-    var c = allData[i];
+  for(var j=0; j<allData.length; j++){
+    var c = allData[j];
     var temMeta = metas[c.clienteUnificado] ? true : false;
 
     if(temMeta){
@@ -412,57 +518,13 @@ function render(){
     if(clienteF!=="todos" && c.clienteUnificado!==clienteF) continue;
 
     filtered.push(c);
-    vendaTotal += c.venda;
-
-    if(!execsData[c.executivo]) execsData[c.executivo] = [];
-    execsData[c.executivo].push(c);
+    vendaTotalFiltrada += c.venda;
   }
 
   document.getElementById("kpi-qtd-metas").textContent = qtdMetasAtivas;
-  document.getElementById("kpi-venda-total").textContent = fmtMoney(vendaTotal);
+  document.getElementById("kpi-venda-total").textContent = fmtMoney(vendaTotalFiltrada);
   document.getElementById("kpi-soma-metas").textContent = fmtMoney(somaMetasAtivas);
   document.getElementById("table-count").textContent = filtered.length + " registros";
-
-  // Renderizar Curva ABC detalhada por executivo (Listando os nomes do Grupo A - 80%)
-  var abcBox = document.getElementById("abc-container");
-  abcBox.innerHTML = "";
-  var execNames = Object.keys(execsData);
-  
-  for(var e=0; e<execNames.length; e++){
-    var exName = execNames[e];
-    var listaCli = execsData[exName];
-    listaCli.sort(function(a,b){ return b.venda - a.venda; });
-    
-    var subTotal = 0;
-    for(var l=0; l<listaCli.length; l++) subTotal += listaCli[l].venda;
-
-    var acumulado = 0;
-    var clientesA = [];
-    var clientesB = [];
-    var clientesC = [];
-
-    for(var x=0; x<listaCli.length; x++){
-      acumulado += listaCli[x].venda;
-      var pct = subTotal > 0 ? (acumulado / subTotal) : 0;
-      if(pct <= 0.8){
-        clientesA.push(listaCli[x].clienteUnificado + " (" + fmtMoney(listaCli[x].venda) + ")");
-      } else if(pct <= 0.95){
-        clientesB.push(listaCli[x].clienteUnificado);
-      } else {
-        clientesC.push(listaCli[x].clienteUnificado);
-      }
-    }
-
-    var div = document.createElement("div");
-    div.style.cssText = "display:flex; flex-direction:column; gap:4px; padding:10px 12px; background:var(--surface-raised); border-radius:8px; font-size:13px;";
-    div.innerHTML = '<div style="display:flex; justify-content:space-between; align-items:center;">' +
-                    '<b>Executivo: ' + exName + '</b>' +
-                    '<span style="font-size:11px; color:var(--text-tertiary);">Total: ' + fmtMoney(subTotal) + '</span>' +
-                    '</div>' +
-                    '<div style="font-size:12px; color:var(--text-secondary);"><b>Grupo A (80% do volume):</b> ' + (clientesA.length ? clientesA.join(", ") : "Nenhum") + '</div>' +
-                    '<div style="font-size:11px; color:var(--text-tertiary);"><b>Grupo B (15%):</b> ' + (clientesB.length ? clientesB.length + " clientes" : "Nenhum") + ' | <b>Grupo C (5%):</b> ' + (clientesC.length ? clientesC.length + " clientes" : "Nenhum") + '</div>';
-    abcBox.appendChild(div);
-  }
 
   var tbody = document.getElementById("tbody");
   tbody.innerHTML = "";
@@ -472,11 +534,12 @@ function render(){
     emptyMsg.classList.remove("hidden");
   } else {
     emptyMsg.classList.add("hidden");
-    for(var m=0;m<filtered.length;m++){
+    for(var m=0; m<filtered.length; m++){
       var c3 = filtered[m];
       var metaInfo = metas[c3.clienteUnificado];
       var terminoTexto = metaInfo ? metaInfo.fim.split("-").reverse().join("/") : "-";
       var valorMetaTexto = metaInfo ? fmtMoney(metaInfo.valor) : "Sem meta";
+      var participacaoPct = vendaTotalGeral > 0 ? ((c3.venda / vendaTotalGeral) * 100).toFixed(2) + "%" : "0%";
 
       var tr = document.createElement("tr");
       tr.innerHTML = '<td><span class="clickable-client" onclick="abrirModalMeta(\x27'+c3.clienteUnificado+'\x27)">'+c3.clienteUnificado+'</span></td>' +
@@ -484,9 +547,9 @@ function render(){
                      '<td style="color:var(--text-tertiary)">'+c3.cpfCnpj+'</td>' +
                      '<td style="color:var(--text-secondary)">'+c3.regional+'</td>' +
                      '<td class="center" style="color:var(--text-primary)">'+fmtMoney(c3.venda)+'</td>' +
+                     '<td class="center" style="color:var(--accent)">'+participacaoPct+'</td>' +
                      '<td class="center" style="color:var(--text-secondary)">'+terminoTexto+'</td>' +
-                     '<td class="center" style="color:var(--accent)">'+valorMetaTexto+'</td>' +
-                     '<td class="center" style="color:'+(String(c3.yoy).includes('-')?'var(--danger)':'var(--positive)')+'">'+c3.yoy+'</td>';
+                     '<td class="center" style="color:var(--positive)">'+valorMetaTexto+'</td>';
       tbody.appendChild(tr);
     }
   }
